@@ -46,16 +46,17 @@ long swStartMills=0; //前回実行の時間を格納する。
 //===機械とFirebaseのPath設定====================================================  
 //const char* NowLine="MC024"; //ターゲットとする機械番号（ハイフン等は入れない）
 //String MachineNo = "LN034";  //機械番号を定数として入力しておく。
-String MachineNo = "MC024";  //機械番号を定数として入力しておく。
+//String MachineNo = "MC024";  //機械番号を定数として入力しておく。
 //String MachineNo = "MC031";  //機械番号を定数として入力しておく。
-//String MachineNo = "GT999";  //機械番号を定数として入力しておく。
+String MachineNo = "GT999";  //機械番号を定数として入力しておく。
+//String MachineNo = "GH002";  //機械番号を定数として入力しておく。
 
 String user_path = "SP_Status";
 String user_path2 = "NishioMachineCT";
 
 //===WiFi設定===================================================================
-//#define WIFI_SSID "GlocalMe_88440" // ①
-//#define WIFI_PASSWORD "85533446"
+#define WIFI_SSID "GlocalMe_88440" // ①
+#define WIFI_PASSWORD "85533446"
 
 //#define WIFI_SSID "logitec54" // ①
 //#define WIFI_PASSWORD "614G2546DH227"
@@ -66,8 +67,8 @@ String user_path2 = "NishioMachineCT";
 //const char* WIFI_SSID = "nishio";
 //const char* WIFI_PASSWORD = "0563522221";
 
-const char* WIFI_SSID = "B_IoT";
-const char* WIFI_PASSWORD = "wF7y82Az";
+//const char* WIFI_SSID = "B_IoT";
+//const char* WIFI_PASSWORD = "wF7y82Az";
 
 //===Firebase==================================================================
 
@@ -105,6 +106,8 @@ int count = 1;  // ③
 
 boolean ErrBool = false ;  //ERR1でtrurとする　○秒以下では処理を行わない、の為の実装
 boolean RunBool = false ;  //RUN1でtrueとする　○秒以下では処理を行わない、の為の実装
+
+boolean SetKKT = false ;  //BtnA １秒以上の長押しで!(否定演算子)で反転させる。
 
 //=======================================================================================
 #define TFT_BLACK       0x0000      /*   0,   0,   0 */
@@ -288,6 +291,51 @@ void sendToFirebase(String NowMachine,String NowStatus){
   digitalWrite(10,LOW); //内蔵LEDを点灯
 }
 
+void LcdSet(String Content,int ContentColor){
+    switch(ContentColor){
+      case 0:
+            M5.Lcd.fillScreen(TFT_BLACK);
+            break;
+      case 1:
+            M5.Lcd.fillScreen(TFT_GREEN);
+            break;
+      case 2:
+            M5.Lcd.fillScreen(TFT_RED);
+            break;
+      case 8:
+            M5.Lcd.fillScreen(TFT_PINK);
+            break;
+      case 9:
+            M5.Lcd.fillScreen(TFT_YELLOW);
+            break;
+    } 
+  
+//    M5.Lcd.fillScreen(TFT_BLACK);
+    M5.Lcd.setTextColor(TFT_DARKGREEN); //文字色設定(背景は透明)(WHITE, BLACK, RED, GREEN, B
+    M5.Lcd.setCursor(10, 1, 1);
+    M5.Lcd.setTextSize(3);//文字の大きさを設定（1～7）
+    M5.Lcd.print(MachineNo);
+    M5.Lcd.setCursor(10, 30);
+    M5.Lcd.setTextSize(5);//文字の大きさを設定（1～7）
+    
+    switch(ContentColor){
+      case 0:
+            M5.Lcd.setTextColor(TFT_CYAN); //文字色設定(背景は透明)(WHITE, BLACK, RED, GREEN, B
+            break;
+      case 1:
+      case 2:
+      case 8:
+      case 9:
+            M5.Lcd.setTextColor(TFT_BLACK);
+            break;
+    } 
+    
+//    M5.Lcd.setTextColor(ContentColor); //文字色設定(背景は透明)(WHITE, BLACK, RED, GREEN, B
+
+    M5.Lcd.print(Content);   
+    digitalWrite(10,HIGH);      
+}
+
 void setup() {
   M5.begin(); 
   M5.Lcd.setRotation(1);
@@ -359,35 +407,51 @@ void loop() {
   M5.update();  // ⑤
   digitalWrite(10,HIGH);
 
-
+//===============================================================
   if (M5.BtnA.wasPressed() ) {  // ⑥
-    //M5.Lcd.clear; M5StickC では無効のコマンド
-    M5.Lcd.fillScreen(BLACK);
-    M5.Lcd.setCursor(10, 10); //文字表示の左上位置を設定
+//      2021/4/9 昨日の雅さんリクエストによる、計画停止を長押しで実装するために、wasPressed処理は一旦コメントアウトする
     
-    M5.Lcd.setTextColor(RED); //文字色設定(背景は透明)(WHITE, BLACK, RED, GREEN, B
-    M5.Lcd.setTextSize(1);//文字の大きさを設定（1～7）
-//    M5.Lcd.print("Hey Guys! \n\n We’re sending to Slack!");
-    M5.Lcd.print("Send to Slack!");
-    delay(1000);                   //500ms停止
-//    Firebase.setInt("/button", count);  // ⑦
-     Andon_ON(1);                 //slackへ送信
-
-    M5.Lcd.setTextColor(GREEN, RED); //文字色設定と背景色設定(WHITE, BLACK, RED, GREEN, BLUE, YELLOW...)
-    M5.Lcd.setCursor(10, 100); //文字表示の左上位置を設定
-//    M5.Lcd.print("Hey Guys! \n\n Firebase!!");
-    M5.Lcd.print("Firebase!!");
-//     M5.Lcd.fillScreen(RED);
-    sendToFirebase(MachineNo,"RUN1");
-//    Firebase.push("/button", count);
-    delay(1000);
-    M5.Lcd.fillScreen(WHITE);
-    M5.Lcd.setTextColor(GREEN, RED);
-    M5.Lcd.setCursor(10, 10);
-    M5.Lcd.println(count +" Pushed");
-    delay(2000);   //画面表示を確認する為には、Delayが必要だよね。
-    count ++;  // ⑧
+//    //M5.Lcd.clear; M5StickC では無効のコマンド
+//    M5.Lcd.fillScreen(BLACK);
+//    M5.Lcd.setCursor(10, 10); //文字表示の左上位置を設定
+//    
+//    M5.Lcd.setTextColor(RED); //文字色設定(背景は透明)(WHITE, BLACK, RED, GREEN, B
+//    M5.Lcd.setTextSize(1);//文字の大きさを設定（1～7）
+////    M5.Lcd.print("Hey Guys! \n\n We’re sending to Slack!");
+//    M5.Lcd.print("Send to Slack!");
+//    delay(1000);                   //500ms停止
+////    Firebase.setInt("/button", count);  // ⑦
+//     Andon_ON(1);                 //slackへ送信
+//
+//    M5.Lcd.setTextColor(GREEN, RED); //文字色設定と背景色設定(WHITE, BLACK, RED, GREEN, BLUE, YELLOW...)
+//    M5.Lcd.setCursor(10, 100); //文字表示の左上位置を設定
+////    M5.Lcd.print("Hey Guys! \n\n Firebase!!");
+//    M5.Lcd.print("Firebase!!");
+////     M5.Lcd.fillScreen(RED);
+//    sendToFirebase(MachineNo,"RUN1");
+////    Firebase.push("/button", count);
+//    delay(1000);
+//    M5.Lcd.fillScreen(WHITE);
+//    M5.Lcd.setTextColor(GREEN, RED);
+//    M5.Lcd.setCursor(10, 10);
+//    M5.Lcd.println(count +" Pushed");
+//    delay(2000);   //画面表示を確認する為には、Delayが必要だよね。
+//    count ++;  // ⑧
   }
+//  ============================================================
+  int btnA = M5.BtnA.pressedFor(1000); // ホームボタン
+  if(btnA==1){
+    if(SetKKT){
+      SetKKT = false;
+  
+    }else{
+      SetKKT = true;
+  
+    }
+  }
+  Serial.print("btnAの状態は、");
+  Serial.println(SetKKT);
+//  ============================================================
   if (M5.BtnA.wasReleased() ) {  // ⑥
 //    M5.Lcd.clear;
     M5.Lcd.println("Released");
@@ -435,7 +499,7 @@ void loop() {
     M5.Lcd.setRotation(0);
     M5.Lcd.setCursor(0, 0, 1);
     
-    M5.Lcd.qrcode("http://www.bishamon.co.jp");
+    M5.Lcd.qrcode("http://www.ay-vue.firebaseapp.co.jp");
     // M5.Lcd.qrcode(const char *string, uint16_t x = 50, uint16_t y = 10, uint8_t width = 220, uint8_t version = 6);
 
   }
@@ -458,16 +522,16 @@ void loop() {
 
 //  Serial.println("段取り専用　before_sw3" +before_sw3);
 //  Serial.println(before_sw3);
+if(SetKKT){
+  Serial.print(SetKKT);
+  before_sw=8;
+}else{
+  before_sw=0;
   if(before_sw3==0){
     before_sw=9;    //段取り(G0がインプット　GND導通)は９として識別
 
-//    M5.begin(); 
-
-
-    
   }else{
-    
-    
+        
     if (before_sw1==0){      //cdsセンサーの値読み取りを逆転させる（0<=>1)
         before_sw1_gyaku=1;
         
@@ -494,33 +558,44 @@ void loop() {
     Serial.println(before_sw);
 //    Serial.println(beforeinput);
   }
+}
     M5.Lcd.setRotation(1);
-    M5.Lcd.setCursor(1, 1, 1);
-    M5.Lcd.setTextSize(7);//文字の大きさを設定（1～7）
-    switch(before_sw){    //画面表示
+    
+    
+    switch(before_sw){    //画面表示と内臓LEDのフラッシュ点滅
     
       case 0://停止中の場合
-            M5.Lcd.fillScreen(TFT_BLACK);
-            M5.Lcd.setTextColor(TFT_CYAN); //文字色設定(背景は透明)(WHITE, BLACK, RED, GREEN, B
-            M5.Lcd.print("STP");  
-            digitalWrite(10,HIGH);
+            LcdSet("Stop",before_sw);           
             break;       
       case 1://稼働中の場合
-            M5.Lcd.fillScreen(TFT_GREEN);
-            M5.Lcd.setTextColor(TFT_NAVY); //文字色設定(背景は透明)(WHITE, BLACK, RED, GREEN, B
-            M5.Lcd.print("RUN");  
-            digitalWrite(10,HIGH);
+            LcdSet("RUN",before_sw);  
+//            M5.Lcd.fillScreen(TFT_GREEN);
+//            M5.Lcd.setTextColor(TFT_NAVY); //文字色設定(背景は透明)(WHITE, BLACK, RED, GREEN, B
+//            M5.Lcd.print("RUN");  
+//            digitalWrite(10,HIGH);
             break;
       case 2://異常中の場合
-            M5.Lcd.fillScreen(TFT_RED);
-            M5.Lcd.setTextColor(TFT_DARKGREY); //文字色設定(背景は透明)(WHITE, BLACK, RED, GREEN, B
-            M5.Lcd.print("ERR");  
+            LcdSet("ERR",before_sw);  
+//            M5.Lcd.fillScreen(TFT_RED);
+//            M5.Lcd.setTextColor(TFT_DARKGREY); //文字色設定(背景は透明)(WHITE, BLACK, RED, GREEN, B
+//            M5.Lcd.print("ERR");  
+//            digitalWrite(10,HIGH);
+            break;
+      case 8://計画停止の場合
+            LcdSet("KKTS",before_sw);  
+//            M5.Lcd.fillScreen(TFT_PINK);
+//            M5.Lcd.setTextColor(BLACK); //文字色設定(背景は透明)(WHITE, BLACK, RED, GREEN, B
+//            M5.Lcd.print("KKTS");  
+            delay(1200);
+            digitalWrite(10,LOW);
+            delay(50);
             digitalWrite(10,HIGH);
             break;
       case 9://段取り中の場合
-            M5.Lcd.fillScreen(TFT_YELLOW);
-            M5.Lcd.setTextColor(BLACK); //文字色設定(背景は透明)(WHITE, BLACK, RED, GREEN, B
-            M5.Lcd.print("DDR");
+            LcdSet("DDR",before_sw);  
+//            M5.Lcd.fillScreen(TFT_YELLOW);
+//            M5.Lcd.setTextColor(BLACK); //文字色設定(背景は透明)(WHITE, BLACK, RED, GREEN, B
+//            M5.Lcd.print("DDR");
         //    M5.Lcd.print("Hey Guys! \n\n We’re sending to Slack!");
         //    M5.Lcd.setTextFont(7); 多分コレは無効
             delay(1200);
@@ -540,8 +615,10 @@ void loop() {
     int sw2=digitalRead(input2);
     int sw3=digitalRead(input3);
 
-
-
+if(SetKKT){
+  sw=8;
+}else{
+  sw=0;
   if(before_sw3==0){
     sw=9;    //段取りは９として識別
   }else{  
@@ -562,6 +639,7 @@ void loop() {
     sw=sw1_gyaku+sw2_gyaku*2;
   
   }
+}
   //  Serial.println(sw);
    
    //チャタリング対策
@@ -587,7 +665,6 @@ if(chkflag==true){          //チャタリングでは無い場合 =>ほとん�
 
     if(beforeinput!=sw){  //値に変化がある場合
     
-
       swChange=true;            //センサー値変化=>値変化変数swChangeを真とする
       swStartMills=millis();    //センサー値変化のmillis()時刻を記録
       time_t nowTime;
@@ -635,6 +712,9 @@ if(chkflag==true){          //チャタリングでは無い場合 =>ほとん�
                                 ErrBool = false;
                               };
                               break;
+                        case 8:
+                              sendToFirebase(MachineNo,"KKT2"); 
+                              break;
                         case 9:
                               sendToFirebase(MachineNo,"DDR2"); 
                               break;
@@ -680,6 +760,14 @@ if(chkflag==true){          //チャタリングでは無い場合 =>ほとん�
                                 RunBool = true;
                                 
                                 break;
+                        case 8:
+                              sendToFirebase(MachineNo,"RUN1"); //稼働中（cdsセンサー緑を検知）
+                              sendToFirebase(MachineNo,"KKT2"); 
+                              break;
+                        case 9:
+                              sendToFirebase(MachineNo,"RUN1"); //稼働中（cdsセンサー緑を検知）
+                              sendToFirebase(MachineNo,"DDR2"); 
+                              break;
                           case 99:
                                 //初期値（９９）の場合は何も処理をしない。beforeinputが最新ｓｗの値に更新される
                                 break;
@@ -727,33 +815,18 @@ if(chkflag==true){          //チャタリングでは無い場合 =>ほとん�
                      };
 
                      break;
+               case 8:
+                      //計画停止中の処理
+                      sendToFirebase(MachineNo,"KKT1");                                         
+                   
+                      beforeinput=sw;   //次回サイクルに備えて、前回分として値を格納しておく。
+                      swChange=false;   //値変化の処理が完了したので、値変化のフラッグを初期値（false）に戻す。   
+                      break;
                case 9:
                      if(nowMillis>5000){       //５秒以上段取りSWがオンになっている状態（寸動や軽微なエラーを除去する）
 //                       sendToFirebase(MachineNo,"DDR1");
                        sendToFirebase(MachineNo,"DDR1");                                         
-//                     switch(beforeinput){
-//                        case 0:
-//                              //"ERR1"
-////                             ErrBool = true;
-//                             sendToFirebase(MachineNo,"DDR1");  
-//                             break;
-//                        case 1:
-//                              //"RUN2" & "ERR1"
-////                              if(RunBool){
-////                                sendToFirebase(MachineNo,"RUN2");
-////                                RunBool=false;
-////                              }
-////                              ErrBool = true;
-//                              sendToFirebase(MachineNo,"DDR1");
-//                              break;
-//                        case 2:
-//                        case 3:
-//                              break;
-//                            break;
-//                      case 99:
-//                            //初期値（９９）の場合は何も処理をしない。beforeinputが最新ｓｗの値に更新される
-//                            break;
-//                      }
+                     
                         beforeinput=sw;   //次回サイクルに備えて、前回分として値を格納しておく。
                         swChange=false;   //値変化の処理が完了したので、値変化のフラッグを初期値（false）に戻す。
                       
