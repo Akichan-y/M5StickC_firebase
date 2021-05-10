@@ -43,20 +43,22 @@ int beforeinput=99;
 boolean swChange = false;
 long swStartMills=0; //前回実行の時間を格納する。
 
-//===機械とFirebaseのPath設定====================================================  
+//===機械の設定====================================================  
 //const char* NowLine="MC024"; //ターゲットとする機械番号（ハイフン等は入れない）
 //String MachineNo = "LN034";  //機械番号を定数として入力しておく。
-//String MachineNo = "MC024";  //機械番号を定数として入力しておく。
-//String MachineNo = "MC031";  //機械番号を定数として入力しておく。
-String MachineNo = "GT999";  //機械番号を定数として入力しておく。
-//String MachineNo = "GH002";  //機械番号を定数として入力しておく。
-
-String user_path = "SP_Status";
-String user_path2 = "NishioMachineCT";
-
+//String MachineNo = "MC024";  //
+//String MachineNo = "MC031";  //
+//String MachineNo = "GT999";  //
+//String MachineNo = "GH002";  //
+//String MachineNo = "MC026";  //
+//福島工場
+//String MachineNo = "MC010";  //
+String MachineNo = "MC011";  //
+//String MachineNo = "MC009";  //
+//String MachineNo = "MC013";  //
 //===WiFi設定===================================================================
-#define WIFI_SSID "GlocalMe_88440" // ①
-#define WIFI_PASSWORD "85533446"
+//#define WIFI_SSID "GlocalMe_88440" // ①
+//#define WIFI_PASSWORD "85533446"
 
 //#define WIFI_SSID "logitec54" // ①
 //#define WIFI_PASSWORD "614G2546DH227"
@@ -70,11 +72,20 @@ String user_path2 = "NishioMachineCT";
 //const char* WIFI_SSID = "B_IoT";
 //const char* WIFI_PASSWORD = "wF7y82Az";
 
+//福島工場
+//const char* WIFI_SSID = "AP58278CC592A0";
+//const char* WIFI_PASSWORD = "20418600809093";
+
+const char* WIFI_SSID = "B0C7456838C7_G";
+const char* WIFI_PASSWORD = "2QCJZGEGERRK";
 //===Firebase==================================================================
 
 //#define FIREBASE_DB_URL "https://n-iot-a25db.firebaseio.com/" // 
 #define FIREBASE_DB_URL "https://ay-vue.firebaseio.com/" // 
 //#define FIREBASE_DB_URL "https://iot-sandbox-ea132.firebaseio.com/" // 
+
+String user_path = "SP_Status";
+String user_path2 = "NishioMachineCT";
 
 //====Slack===============================================================================
 
@@ -449,8 +460,8 @@ void loop() {
   
     }
   }
-  Serial.print("btnAの状態は、");
-  Serial.println(SetKKT);
+//  Serial.print("btnAの状態は、");
+//  Serial.println(SetKKT);
 //  ============================================================
   if (M5.BtnA.wasReleased() ) {  // ⑥
 //    M5.Lcd.clear;
@@ -463,16 +474,27 @@ void loop() {
     count ++;  // ⑧
   }
   if (M5.BtnB.wasPressed() ) {  // ⑥
-    //M5.Lcd.clear; M5StickC では無効のコマンド
-    M5.Lcd.println(count +" B-Pushed");
 
-//    Firebase.setInt("/button", count);  // ⑦
-    M5.Lcd.fillScreen(GREEN);
-   
-//    sendToFirebase("gt999","1");
-    sendToFirebase(MachineNo,"RUN2");
-//    Firebase.push("/button", count);
-    count ++;  // ⑧
+    if(M5.BtnB.wasPressed()){ //再起動がめんどうなので、Bボタンで行えるようにした
+      esp_restart();
+    }
+    M5.update();
+
+
+    
+    //M5.Lcd.clear; ←M5StickC では使えない
+
+//============================================  カウントアップしたり、
+//    M5.Lcd.println(count +" B-Pushed");
+//
+////    Firebase.setInt("/button", count);  // ⑦
+//    M5.Lcd.fillScreen(GREEN);
+//   
+////    sendToFirebase("gt999","1");
+//    sendToFirebase(MachineNo,"RUN2");
+////    Firebase.push("/button", count);
+//    count ++;  // ⑧
+//============================================
   }
   if (M5.BtnB.wasReleased() ) {  // ⑥
 //    M5.Lcd.clear;
@@ -523,7 +545,7 @@ void loop() {
 //  Serial.println("段取り専用　before_sw3" +before_sw3);
 //  Serial.println(before_sw3);
 if(SetKKT){
-  Serial.print(SetKKT);
+//  Serial.print(SetKKT);
   before_sw=8;
 }else{
   before_sw=0;
