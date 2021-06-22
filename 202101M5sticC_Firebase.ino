@@ -357,6 +357,7 @@ void LcdSet(String Content,int ContentColor){
 }
 
 void setup() {
+  setCpuFrequencyMhz(80);
   M5.begin(); 
   M5.Lcd.setRotation(1);
   M5.Lcd.setCursor(0, 0, 1);
