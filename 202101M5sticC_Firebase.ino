@@ -3,16 +3,11 @@
 //ライブラリ一つでこんなに簡単に接続出来るなら、これからはM5StickCの方が良いってことになるなあ！！
 //内蔵バッテリーでFirebase に値が飛ぶのは、ちょっと感動します！
 
-
 //1/12 複数データの取り扱いに難儀をしたが、json形式での送り方がようやくわかった。
 //どこの国のお方かわからないが、https://www.fernandok.com/2020/07/automacao-esp32-e-dht22.html　が大変役に立った。
 //他サイトでは、いまいち理解出来なかった。コードの切り分け方も大変おしゃれである。今後の参考にしたい。
 
 //Web上で複数デバイスを想定したオンオフ表示に成功。藤田学園にて
-
-
-
-
 
 //#include <M5StickC.h>
 //#include <WiFi.h>
@@ -48,21 +43,21 @@ long swStartMills=0; //前回実行の時間を格納する。
 //String MachineNo = "LN034";  //機械番号を定数として入力しておく。
 //String MachineNo = "MC024";  //
 //String MachineNo = "MC031";  //
-//String MachineNo = "GT999";  //
+String MachineNo = "GT999";  //
 //String MachineNo = "GH002";  //
 //String MachineNo = "MC026";  //
 //福島工場
 //String MachineNo = "MC010";  //
-String MachineNo = "MC011";  //
+//String MachineNo = "MC011";  //
 //String MachineNo = "MC009";  //
 //String MachineNo = "MC013";  //
 //===WiFi設定===================================================================
-//#define WIFI_SSID "GlocalMe_88440" // ①
-//#define WIFI_PASSWORD "85533446"
+#define WIFI_SSID "GlocalMe_88440" // ①
+#define WIFI_PASSWORD "85533446"
 
 //#define WIFI_SSID "logitec54" // ①
 //#define WIFI_PASSWORD "614G2546DH227"
-////
+//////
 //const char* WIFI_SSID = "106F3F33EF29";
 //const char* WIFI_PASSWORD = "fxfm5whgjnnfe";
 
@@ -76,8 +71,8 @@ String MachineNo = "MC011";  //
 //const char* WIFI_SSID = "AP58278CC592A0";
 //const char* WIFI_PASSWORD = "20418600809093";
 
-const char* WIFI_SSID = "B0C7456838C7_G";
-const char* WIFI_PASSWORD = "2QCJZGEGERRK";
+//const char* WIFI_SSID = "B0C7456838C7_G";
+//const char* WIFI_PASSWORD = "2QCJZGEGERRK";
 //===Firebase==================================================================
 
 //#define FIREBASE_DB_URL "https://n-iot-a25db.firebaseio.com/" // 
@@ -96,10 +91,23 @@ String AreaName="";
 boolean Andon[2]={false,false}; //あんどん起動中は、true
 long AndonTime[2]={0,0};   //前回のあんどん作動時間の記録
 
+
+//slackの設定が変わったと思われる。-----------------------------------------------------------------------------------
+//以下で、Incoming Webhookというものを、一つ一つに設定していくことが必要みたい。
+//https://w1554440553-fih604877.slack.com/services/2143440998752?updated=1
+
+//以下が参考になると思われる
+//https://qiita.com/kshibata101/items/0e13c420080a993c5d16
+
 //slack 呼び出しグループの指定 slack
-const char* SlackWebhookURL = "https://hooks.slack.com/services/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";
+const char* SlackWebhookURL = "https://hooks.slack.com/services/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";
+//const char* SlackWebhookURL = "https://hooks.slack.com/services/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";
+//↑以前は、この下側のアドレスで長らく問題なかったのだが・・・、2021/5/31久しぶりに使ってみたら、動かずにこの方法がわかった。
+//----------------------------------------------------------------------------------------------------------------
 
 // SSL Certificate finngerprint for the host
+
+
 const char* fingerprint = "fingerprint";
 
 String message; //送信するチャンネルの指定
@@ -243,8 +251,9 @@ void Andon_ON(int AreaNo){
     AndonTime[AreaNo]=millis();
 
     delay(10);
+    Serial.println("☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆");
     slack_connect(AreaNo);  
-    //Serial.println("☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆");
+    
     delay(10);
            
     Andon[AreaNo]=true;
@@ -432,7 +441,7 @@ void loop() {
 //    M5.Lcd.print("Send to Slack!");
 //    delay(1000);                   //500ms停止
 ////    Firebase.setInt("/button", count);  // ⑦
-//     Andon_ON(1);                 //slackへ送信
+     Andon_ON(1);                 //slackへ送信
 //
 //    M5.Lcd.setTextColor(GREEN, RED); //文字色設定と背景色設定(WHITE, BLACK, RED, GREEN, BLUE, YELLOW...)
 //    M5.Lcd.setCursor(10, 100); //文字表示の左上位置を設定
@@ -544,13 +553,13 @@ void loop() {
 
 //  Serial.println("段取り専用　before_sw3" +before_sw3);
 //  Serial.println(before_sw3);
-if(SetKKT){
+if(SetKKT){//KKT計画停止モード の場合おは、before_swを８にセットする
 //  Serial.print(SetKKT);
   before_sw=8;
 }else{
-  before_sw=0;
-  if(before_sw3==0){
-    before_sw=9;    //段取り(G0がインプット　GND導通)は９として識別
+  before_sw=0;  //KKT計画停止モードでは無い場合、before_swを０にセットする
+  if(before_sw3==0){  //段取りSWが入っている場合
+    before_sw=9;    //段取り(G0がインプット　GND導通)は、 before_swを９にセット
 
   }else{
         
@@ -642,7 +651,8 @@ if(SetKKT){
 }else{
   sw=0;
   if(before_sw3==0){
-    sw=9;    //段取りは９として識別
+    sw=9;       //段取りは９として識別
+             //この上５〜６行にて、計画停止が最優先、段取りがその次に優先、他は下記の通りに分岐となる。
   }else{  
     if (sw1==0){      //cdsセンサーの値読み取りを逆転させる（0<=>1)
         sw1_gyaku=1;
@@ -664,13 +674,13 @@ if(SetKKT){
 }
   //  Serial.println(sw);
    
-   //チャタリング対策
-  if (before_sw==sw){     
-      chkflag=true;             //３００ミリsecの差を読み取り、センサー値を確定(チャタリングでは無いと判断)
-  
-  }else{
-      chkflag=false;
-  }
+ //チャタリング対策
+if (before_sw==sw){     
+    chkflag=true;             //３００ミリsecの差を読み取り、センサー値を確定(チャタリングでは無いと判断)
+
+}else{
+    chkflag=false;
+}
 //} 
   //================================================================================
 
@@ -693,24 +703,13 @@ if(chkflag==true){          //チャタリングでは無い場合 =>ほとん�
       nowTime = time(NULL);           //センサー値変化時点のRTC時刻を記録
     }
     
-//  }
-    
-    Serial.print("beforeinputは、");
-    Serial.println(beforeinput);
 //    
-//    Serial.print("swChangeは、");
-//    Serial.println(swChange);
+//    Serial.print("beforeinputは、");
+//    Serial.println(beforeinput);
+
     
     if(swChange==true){       //値変化変数swChangeが真の場合
       
-      delay(10);
-        
-    //      if(beforeinput!=sw && swStartMills>3000){
-//          Serial.print("swChangeは、");
-//          Serial.println(swChange);
-//          Serial.print(millis()-swStartMills);
-//            Serial.print("現在のswは、");
-//            Serial.println(sw);
             delay(10);
             switch (sw){
               case 0:
@@ -719,8 +718,8 @@ if(chkflag==true){          //チャタリングでは無い場合 =>ほとん�
                               break;
                         case 1:
                               //"RUN2"
-//                              Serial.println("swは正常！");
-                              delay(10);
+//                              Serial.println("swは正常なのか？？？！");
+                              delay(1200);
                               if(RunBool){
                                 sendToFirebase(MachineNo,"RUN2"); 
                                 RunBool = false;
@@ -767,7 +766,6 @@ if(chkflag==true){          //チャタリングでは無い場合 =>ほとん�
                           case 1:
                                 break;
                           case 2:
-                          case 3:
                                 //"ERR2" & "RUN1"
                                 //"ERR2"
                                 delay(10);
@@ -777,18 +775,26 @@ if(chkflag==true){          //チャタリングでは無い場合 =>ほとん�
                                   sendToFirebase(MachineNo,"ERR2"); 
                                   ErrBool = false;
                                 };
-                                delay(10);
+                                delay(1200);
                                 sendToFirebase(MachineNo,"RUN1");
                                 RunBool = true;
                                 
                                 break;
                         case 8:
-                              sendToFirebase(MachineNo,"RUN1"); //稼働中（cdsセンサー緑を検知）
                               sendToFirebase(MachineNo,"KKT2"); 
+                              delay(1200);//これぐらい待たないと、時間が同じになってしまって、JSで検出出来ない？
+                              sendToFirebase(MachineNo,"RUN1"); //稼働中（cdsセンサー緑を検知）
+                              RunBool = true;//2021/6/22追加。これが無いことで、RUNが入りっぱなしになっていた。
                               break;
                         case 9:
-                              sendToFirebase(MachineNo,"RUN1"); //稼働中（cdsセンサー緑を検知）
+                              delay(3000);
+//                              Serial.println("ここですよー！");
                               sendToFirebase(MachineNo,"DDR2"); 
+                              delay(1200);//これぐらい待たないと、時間が同じになってしまって、JSで検出出来ない？
+//                              Serial.println("1200ミリセック待ってから稼働中にー！");
+                              
+                              sendToFirebase(MachineNo,"RUN1"); //稼働中（cdsセンサー緑を検知）
+                              RunBool = true;//2021/6/22追加。これが無いことで、RUNが入りっぱなしになっていた。
                               break;
                           case 99:
                                 //初期値（９９）の場合は何も処理をしない。beforeinputが最新ｓｗの値に更新される
@@ -801,7 +807,6 @@ if(chkflag==true){          //チャタリングでは無い場合 =>ほとん�
                      break;
                      
               case 2:
-              case 3:
                      if(nowMillis>2000){       //2秒以上点灯している状態（寸動や軽微なエラーを除去する）
                                                                 
                        switch(beforeinput){
@@ -817,15 +822,30 @@ if(chkflag==true){          //チャタリングでは無い場合 =>ほとん�
                                   sendToFirebase(MachineNo,"RUN2");
                                   RunBool=false;
                                 }
-                                delay(10);
+                                delay(1200);
                                 
                                 sendToFirebase(MachineNo,"ERR1");
                                 ErrBool = true;
                                 
                                 break;
                           case 2:
-                          case 3:
                                 break;
+                          case 8:
+                              sendToFirebase(MachineNo,"KKT2"); 
+                              delay(1200);//これぐらい待たないと、時間が同じになってしまって、JSで検出出来ない？
+                              sendToFirebase(MachineNo,"ERR1"); //稼働中（cdsセンサー緑を検知）
+                              ErrBool = true;//2021/6/22追加。これが無いことで、ERRが入りっぱなしになっていた。
+                              break;
+                          case 9:
+                              delay(3000);
+//                              Serial.println("ここですよー！");
+                              sendToFirebase(MachineNo,"DDR2"); 
+                              delay(1200);//これぐらい待たないと、時間が同じになってしまって、JSで検出出来ない？
+//                              Serial.println("1200ミリセック待ってから稼働中にー！");
+                              
+                              sendToFirebase(MachineNo,"ERR1"); //稼働中（cdsセンサー緑を検知）
+                              ErrBool = true;//2021/6/22追加。これが無いことで、ERRが入りっぱなしになっていた。
+                              break;
                               
                         case 99:
                               //初期値（９９）の場合は何も処理をしない。beforeinputが最新ｓｗの値に更新される
@@ -837,17 +857,109 @@ if(chkflag==true){          //チャタリングでは無い場合 =>ほとん�
                      };
 
                      break;
-               case 8:
+               case 8://計画停止
+                     if(nowMillis>5000){       //５秒以上段取りSWがオンになっている状態（寸動や軽微なエラーを除去する）
+                                             switch(beforeinput){
+                          case 0:
+                                //"ERR1"
+                               sendToFirebase(MachineNo,"KKT1");
+                               ErrBool = true;
+                               delay(10);
+                           
+                               break;
+                          case 1:
+                                
+                                if(RunBool){
+                                  sendToFirebase(MachineNo,"RUN2");
+                                  RunBool=false;
+                                }
+                                
+                                delay(1200);
+                                sendToFirebase(MachineNo,"KKT1");
+                                delay(1);
+                                
+                                break;
+                          case 2:
+
+                                if(ErrBool){
+                                  sendToFirebase(MachineNo,"ERR2");
+                                  ErrBool=false;
+                                }
+                                delay(1200);
+                                
+                                sendToFirebase(MachineNo,"KKT1");
+                                
+                                
+                                break;
+                          case 8:
+
+                                break;
+                          case 9:
+                                sendToFirebase(MachineNo,"DDR2");
+                                delay(1200);
+                                sendToFirebase(MachineNo,"ERR1");
+                                ErrBool = true;
+                                break;
+                              
+                        case 99:
+                              //初期値（９９）の場合は何も処理をしない。beforeinputが最新ｓｗの値に更新される
+                              break;
+                        };
+
+               
                       //計画停止中の処理
-                      sendToFirebase(MachineNo,"KKT1");                                         
+
+                                                          
                    
                       beforeinput=sw;   //次回サイクルに備えて、前回分として値を格納しておく。
                       swChange=false;   //値変化の処理が完了したので、値変化のフラッグを初期値（false）に戻す。   
                       break;
-               case 9:
+                      
+               case 9://段取り
+               
                      if(nowMillis>5000){       //５秒以上段取りSWがオンになっている状態（寸動や軽微なエラーを除去する）
-//                       sendToFirebase(MachineNo,"DDR1");
-                       sendToFirebase(MachineNo,"DDR1");                                         
+                                             switch(beforeinput){
+                          case 0:
+                                //"ERR1"
+                               sendToFirebase(MachineNo,"DDR1"); 
+                               ErrBool = true;
+                                
+                               break;
+                          case 1:
+                                //"RUN2" & "ERR1"
+                                if(RunBool){
+                                  sendToFirebase(MachineNo,"RUN2");
+                                  RunBool=false;
+                                }
+                                delay(1200);
+                                
+                                sendToFirebase(MachineNo,"DDR1");
+                                ErrBool = true;
+                                
+                                break;
+                          case 2:
+                                //"RUN2" & "ERR1"
+                                if(ErrBool){
+                                  sendToFirebase(MachineNo,"ERR2");
+                                  RunBool=false;
+                                }
+                                delay(1200);
+                                
+                                sendToFirebase(MachineNo,"DDR1");
+                                ErrBool = true;
+                                
+                                break;
+                          case 8:
+                                sendToFirebase(MachineNo,"KKT2");
+                                sendToFirebase(MachineNo,"DDR1");
+                                break;
+                          case 9:
+                                break;
+                              
+                        case 99:
+                              //初期値（９９）の場合は何も処理をしない。beforeinputが最新ｓｗの値に更新される
+                              break;
+                        };
                      
                         beforeinput=sw;   //次回サイクルに備えて、前回分として値を格納しておく。
                         swChange=false;   //値変化の処理が完了したので、値変化のフラッグを初期値（false）に戻す。
@@ -857,7 +969,7 @@ if(chkflag==true){          //チャタリングでは無い場合 =>ほとん�
                       break;
             }               
 
-
+        }
     }
 
     
