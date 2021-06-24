@@ -38,6 +38,8 @@ int beforeinput=99;
 boolean swChange = false;
 long swStartMills=0; //前回実行の時間を格納する。
 
+long longBeforeconnect = 0 ; //６０秒ごとにWifiのコネクト状態を確認する
+
 //===機械の設定====================================================  
 //const char* NowLine="MC024"; //ターゲットとする機械番号（ハイフン等は入れない）
 //String MachineNo = "LN034";  //機械番号を定数として入力しておく。
@@ -422,10 +424,32 @@ void setup() {
   
   pinMode(10,OUTPUT);       //10内蔵LED
   Firebase.begin(FIREBASE_DB_URL);   // ④
+
+  longBeforeconnect = millis();
 }
 
 void loop() {
   M5.update();  // ⑤
+
+  //コネクトしてから1分経過していたらコネクト確認処理を行う
+  //前田先生から、slackでソースコードと解説をもらった。
+  if(longBeforeconnect + 60000 <= millis()){
+    //wifiのコネクト確認
+    if( WiFi.status() != WL_CONNECTED) {
+     //再接続
+       WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
+       //接続状態になるまで待つ
+       while (WiFi.status() != WL_CONNECTED) {
+          delay(500);
+          Serial.print(".");
+       }
+     }else{
+       Serial.println("Wi-Fi connect check OK"); 
+     }
+     longBeforeconnect = millis();
+  }
+
+  
   digitalWrite(10,HIGH);
 
 //===============================================================
