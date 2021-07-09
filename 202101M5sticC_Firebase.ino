@@ -43,19 +43,22 @@ long longBeforeconnect = 0 ; //６０秒ごとにWifiのコネクト状態を確
 //===機械の設定====================================================  
 //const char* NowLine="MC024"; //ターゲットとする機械番号（ハイフン等は入れない）
 //String MachineNo = "LN034";  //機械番号を定数として入力しておく。
-//String MachineNo = "MC024";  //
+String MachineNo = "LNB035";  //
 //String MachineNo = "MC031";  //
-String MachineNo = "GT999";  //
+//String MachineNo = "GT999";  //
 //String MachineNo = "GH002";  //
-//String MachineNo = "MC026";  //
+//String MachineNo = "MC028";  //
+//String MachineNo = "MC037";  //
+//String MachineNo = "EX124";  //
+//String MachineNo = "MC037";  //
 //福島工場
 //String MachineNo = "MC010";  //
 //String MachineNo = "MC011";  //
 //String MachineNo = "MC009";  //
 //String MachineNo = "MC013";  //
 //===WiFi設定===================================================================
-#define WIFI_SSID "GlocalMe_88440" // ①
-#define WIFI_PASSWORD "85533446"
+//#define WIFI_SSID "GlocalMe_88440" // ①
+//#define WIFI_PASSWORD "85533446"
 
 //#define WIFI_SSID "logitec54" // ①
 //#define WIFI_PASSWORD "614G2546DH227"
@@ -66,8 +69,8 @@ String MachineNo = "GT999";  //
 //const char* WIFI_SSID = "nishio";
 //const char* WIFI_PASSWORD = "0563522221";
 
-//const char* WIFI_SSID = "B_IoT";
-//const char* WIFI_PASSWORD = "wF7y82Az";
+const char* WIFI_SSID = "B_IoT";
+const char* WIFI_PASSWORD = "wF7y82Az";
 
 //福島工場
 //const char* WIFI_SSID = "AP58278CC592A0";
@@ -244,7 +247,7 @@ void Andon_ON(int AreaNo){
         AreaName = "【★HF_ボディ★】";
         break;
       case 2:
-        AreaName= "【❏HF_バリ取❏】";
+        AreaName= MachineNo + "【❏wifi再接続❏】";
         break;
     }
     message= AreaName + "が君を呼んでいる！";
@@ -306,6 +309,23 @@ void sendToFirebase(String NowMachine,String NowStatus){
   sensorData["status"] = NowStatus ;
   
   Firebase.push("/NishioMachineCT", sensorData);
+//  int cunt=0; 
+//  if (Firebase.failed()) {
+//      cunt++;
+//      delay(500);
+//      M5.Lcd.print(".");
+//      if(cunt%10==0) {
+//        Serial.print("Firebaseが接続できなかったみたい。。。setting /number failed:");
+//        Serial.println(Firebase.error()); 
+//        Firebase.push("/NishioMachineCT", sensorData);
+//
+//        M5.Lcd.println("");
+//        return;
+//      }
+//      
+////      delay(10000);//１０秒待機 
+//     
+//  }
 
   startTime = String(t) +"000";
   jsonBufferSensor.clear();
@@ -433,18 +453,22 @@ void loop() {
 
   //コネクトしてから1分経過していたらコネクト確認処理を行う
   //前田先生から、slackでソースコードと解説をもらった。
-  if(longBeforeconnect + 60000 <= millis()){
+  if(longBeforeconnect + 1000 <= millis()){    //1秒毎に変更
+//    if(longBeforeconnect + 60000 <= millis()){
     //wifiのコネクト確認
     if( WiFi.status() != WL_CONNECTED) {
      //再接続
+       
        WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
        //接続状態になるまで待つ
        while (WiFi.status() != WL_CONNECTED) {
           delay(500);
           Serial.print(".");
        }
+//       Andon_ON(1);//wifi再接続のログをとる あかんわ。なんかSSLでひっかかるみたい。
      }else{
        Serial.println("Wi-Fi connect check OK"); 
+       delay(1000);
      }
      longBeforeconnect = millis();
   }
